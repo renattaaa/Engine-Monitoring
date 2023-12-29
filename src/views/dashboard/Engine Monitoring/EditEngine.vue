@@ -1,0 +1,231 @@
+<template>
+  <div>
+    <button color="primary" text class="pa-2" @click="dialog = true">
+      <v-icon small color="grey" dark>mdi-pencil</v-icon>
+    </button>
+    <v-dialog v-model="dialog" persistent max-width="600px">
+      <v-card>
+        <v-card-title style="color: #356859; font-weight: bold">
+          Edit engine
+          <v-spacer></v-spacer>
+          <button @click="dialog = false">
+            <v-icon>mdi-close</v-icon>
+          </button>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <form @submit.prevent="updateEngine">
+              <v-row>
+                <v-col cols="12" sm="6" md="6">
+                  <v-text-field
+                    v-model="dataEngine.project"
+                    label="Project"
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" md="6">
+                  <v-text-field
+                    v-model="dataEngine.pic"
+                    label="PIC"
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" md="6">
+                  <v-text-field
+                    v-model="dataEngine.name"
+                    label="Name"
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" md="6">
+                  <v-text-field
+                    v-model="dataEngine.location"
+                    label="Location"
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" md="6">
+                  <v-text-field
+                    v-model="dataEngine.status"
+                    label="Status"
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" md="6">
+                  <v-text-field
+                    v-model="dataEngine.run_command"
+                    label="Run Command"
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" md="6">
+                  <v-text-field
+                    v-model="dataEngine.notes"
+                    label="Notes"
+                    required
+                  ></v-text-field>
+                </v-col>
+
+                <v-row class="ma-4">
+                  <!-- form server -->
+                  <v-col cols="12" sm="6" md="6">
+                    <h6>Server</h6>
+                    <v-row>
+                      <v-col cols="12">
+                        <v-text-field
+                          v-model="dataEngine.server"
+                          label="Server"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12">
+                        <v-text-field
+                          v-model="dataEngine.port"
+                          label="Port"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12">
+                        <v-text-field
+                          v-model="dataEngine.server_user"
+                          label="Server User"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12">
+                        <v-text-field
+                          v-model="dataEngine.server_password"
+                          label="Server Password"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
+                  </v-col>
+
+                  <!-- form haproxy -->
+                  <v-col cols="12" sm="6" md="6">
+                    <h6>Harpoxy</h6>
+                    <v-row>
+                      <v-col cols="12">
+                        <v-text-field
+                          v-model="dataEngine.haproxy"
+                          label="Haproxy"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12">
+                        <v-text-field
+                          v-model="dataEngine.haproxy_port"
+                          label="Haproxy Port"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
+                  </v-col>
+                </v-row>
+              </v-row>
+            </form>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <p class="ma-3" v-if="loading">Updating...</p>
+          <p class="ma-3" v-if="success" style="color: #356859">
+            Engine updated
+          </p>
+          <p class="ma-3" v-if="error" style="color: red">
+            Failed to update engine
+          </p>
+          <v-spacer></v-spacer>
+          <v-btn
+            text
+            @click="updateEngine"
+            :disabled="loading"
+            type="submit"
+            class="dialog-button"
+            style="color: #356859"
+          >
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+export default {
+  props: {
+    dataEngine: Object,
+    dataId: String,
+  },
+  data() {
+    return {
+      dialog: false,
+      success: false,
+      error: false,
+      loading: false,
+    };
+  },
+  methods: {
+    async updateEngine() {
+      try {
+        this.loading = true;
+        this.success = false;
+        this.error = false;
+
+        const token = localStorage.getItem("token");
+
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        this.dataEngine.user_id = localStorage.getItem("username");
+        const response = await axios.put(
+          `/api/engine/update/${this.dataId}`,
+          this.dataEngine, config
+        );
+
+        this.$toast.success("Successfully updated data!", {
+          type: "success",
+          position: "top-right",
+          duration: 3000,
+          dismissible: true,
+        });
+
+        console.log(response.data);
+        this.success = true;
+        this.error = false;
+        this.loading = false;
+        setTimeout(() => {
+          this.success = false;
+        }, 3000);
+        setTimeout(() => {
+          this.error = false;
+        }, 3000);
+      } catch (error) {
+        this.$toast.error("Failed updated data", {
+          type: "error",
+          position: "top-right",
+          duration: 3000,
+          dismissible: true,
+        });
+        console.error(error);
+        this.success = false;
+        this.error = true;
+        this.loading = false;
+        setTimeout(() => {
+          this.success = false;
+        }, 3000);
+        setTimeout(() => {
+          this.error = false;
+        }, 3000);
+      }
+    },
+  },
+};
+</script>
+
+<style></style>
